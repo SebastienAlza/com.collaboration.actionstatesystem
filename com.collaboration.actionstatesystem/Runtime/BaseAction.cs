@@ -183,7 +183,7 @@ public abstract class BaseAction : MonoBehaviour, IAction
 			if (components.Length <= 1) // Seul le Transform reste
 			{
 				DestroyImmediate(conditionHolder);
-				conditionHolder = null;
+				conditionHolder = null; 
 			}
 		}
 	}
