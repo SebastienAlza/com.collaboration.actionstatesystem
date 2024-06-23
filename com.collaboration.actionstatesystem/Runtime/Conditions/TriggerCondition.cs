@@ -7,11 +7,6 @@ public class TriggerCondition : BaseCondition
 	[SerializeField]
 	public string targetTag = "Enemy"; // Tag de la cible
 
-	private void Awake()
-	{
-		// Optional: Initialize anything needed on awake
-	}
-
 	public override bool IsMet()
 	{
 		Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, radius);

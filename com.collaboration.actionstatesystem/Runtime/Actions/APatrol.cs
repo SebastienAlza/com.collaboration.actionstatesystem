@@ -40,18 +40,15 @@ public class APatrol : BaseAction
 		}
 		else
 		{
-			Debug.LogWarning("No patrol points generated.");
 			isActionRunning = false;
 		}
 
-		Debug.Log("Entering PatrolAction");
 		base.StartAction();
 	}
 
 	public override void StopAction()
 	{
 		isActionRunning = false;
-		Debug.Log("Exiting PatrolAction");
 		base.StopAction();
 	}
 
@@ -85,7 +82,6 @@ public class APatrol : BaseAction
 		{
 			Vector2 randomPoint = Random.insideUnitCircle * patrolRadius;
 			patrolPoints[i] = (Vector2)transform.position + randomPoint;
-			Debug.Log($"Generated Patrol Point {i}: {patrolPoints[i]}");
 		}
 	}
 

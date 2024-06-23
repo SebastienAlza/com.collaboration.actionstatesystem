@@ -13,6 +13,11 @@ public abstract class BaseAction : MonoBehaviour, IAction
 	[SerializeField, HideInInspector]
 	private BaseCondition condition;
 
+	[SerializeField, HideInInspector]
+	private int conditionUniqueID;
+
+	private static int nextConditionID = 1; // Variable statique pour générer des identifiants uniques
+
 	private const string ConditionHolderName = "ConditionHolder";
 	private GameObject conditionHolder;
 
@@ -21,13 +26,28 @@ public abstract class BaseAction : MonoBehaviour, IAction
 
 	protected virtual void Awake()
 	{
+		// Load the condition only in edit mode
+		if (!Application.isPlaying)
+		{
+			LoadCondition();
+		}
 	}
 
 	private void OnValidate()
 	{
+		// Manage conditions only in edit mode
 		if (!Application.isPlaying)
 		{
 			EditorApplication.delayCall += ManageConditionComponentInEditor;
+		}
+	}
+
+	private void OnEnable()
+	{
+		// Manage prefab instances only in edit mode
+		if (!Application.isPlaying && PrefabUtility.IsPartOfPrefabInstance(gameObject))
+		{
+			ManageConditionComponentInEditor();
 		}
 	}
 
@@ -41,9 +61,13 @@ public abstract class BaseAction : MonoBehaviour, IAction
 		{
 			var objectToDestroy = condition;
 			condition = null;
+			conditionUniqueID = 0; // Reset the unique ID
 			EditorApplication.delayCall += () =>
 			{
-				DestroyImmediate(objectToDestroy);
+				if (objectToDestroy != null)
+				{
+					DestroyImmediate(objectToDestroy);
+				}
 				CleanupConditionHolder();
 			};
 		}
@@ -59,13 +83,41 @@ public abstract class BaseAction : MonoBehaviour, IAction
 					{
 						EditorApplication.delayCall += () =>
 						{
-							DestroyImmediate(objectToDestroy);
+							if (objectToDestroy != null)
+							{
+								DestroyImmediate(objectToDestroy);
+							}
 						};
 					}
 					EditorApplication.delayCall += () =>
 					{
 						condition = conditionHolder.AddComponent(type) as BaseCondition;
+						if (condition != null)
+						{
+							AssignUniqueID(condition); // Assigner un ID unique
+							conditionUniqueID = condition.uniqueID; // Save the unique ID
+						}
 					};
+				}
+				else
+				{
+					conditionUniqueID = condition.uniqueID; // Save the unique ID
+				}
+			}
+		}
+	}
+
+	private void LoadCondition()
+	{
+		if (conditionUniqueID != 0)
+		{
+			BaseCondition[] conditions = GetComponentsInChildren<BaseCondition>(true);
+			foreach (var cond in conditions)
+			{
+				if (cond.uniqueID == conditionUniqueID)
+				{
+					condition = cond;
+					break;
 				}
 			}
 		}
@@ -118,6 +170,29 @@ public abstract class BaseAction : MonoBehaviour, IAction
 		}
 	}
 
+	private void AssignUniqueID(BaseCondition newCondition)
+	{
+		BaseCondition[] existingConditions = GetComponentsInChildren<BaseCondition>(true);
+		int newID = Random.Range(1, int.MaxValue);
+		bool isUnique = false;
+
+		while (!isUnique)
+		{
+			isUnique = true;
+			foreach (var condition in existingConditions)
+			{
+				if (condition.uniqueID == newID)
+				{
+					isUnique = false;
+					newID = Random.Range(1, int.MaxValue);
+					break;
+				}
+			}
+		}
+
+		newCondition.uniqueID = newID;
+	}
+
 	public BaseCondition GetCondition()
 	{
 		return condition;
@@ -163,6 +238,7 @@ public abstract class BaseAction : MonoBehaviour, IAction
 
 	private void OnDisable()
 	{
+		// Cleanup conditions only in edit mode
 		if (!Application.isPlaying)
 		{
 			CleanupCondition();
@@ -175,6 +251,7 @@ public abstract class BaseAction : MonoBehaviour, IAction
 		{
 			DestroyImmediate(condition);
 			condition = null;
+			conditionUniqueID = 0; // Reset the unique ID
 		}
 
 		if (conditionHolder != null)
@@ -183,7 +260,7 @@ public abstract class BaseAction : MonoBehaviour, IAction
 			if (components.Length <= 1) // Seul le Transform reste
 			{
 				DestroyImmediate(conditionHolder);
-				conditionHolder = null; 
+				conditionHolder = null;
 			}
 		}
 	}
@@ -194,13 +271,9 @@ public abstract class BaseAction : MonoBehaviour, IAction
 public interface IAction
 {
 	void Execute();
-
 	bool ShouldTransition();
-
 	void StartAction();
-
 	void StopAction();
-
 	void UpdateAction();
 }
 

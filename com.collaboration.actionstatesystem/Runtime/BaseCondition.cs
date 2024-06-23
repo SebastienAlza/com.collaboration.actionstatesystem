@@ -2,6 +2,8 @@ using UnityEngine;
 
 public abstract class BaseCondition : MonoBehaviour
 {
+	public int uniqueID;
+
 	public bool IsActive { get; private set; }
 
 	public void Activate()
