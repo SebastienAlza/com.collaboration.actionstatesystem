@@ -1,0 +1,12 @@
+{
+  "name": "com.collaboration.actionstatesystem",
+  "version": "1.0.0",
+  "displayName": "Action State System",
+  "description": "A package for handling action states.",
+  "unity": "2022.3",
+  "author": {
+    "name": "Collaboration"
+  },
+  "dependencies": {
+  }
+}
