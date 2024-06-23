@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class APatrol : BaseAction
 {
@@ -7,11 +8,11 @@ public class APatrol : BaseAction
 	public float patrolRadius = 10f; // Rayon de la patrouille
 	public int numberOfPatrolPoints = 5; // Nombre de points de patrouille
 	public float reachThreshold = 0.5f; // Distance à laquelle on considère que le point est atteint
-	public float weightTransitionDistance = 2f; // Distance à partir de laquelle on commence à se diriger vers le prochain point
+	public int samplesPerSegment = 10; // Nombre d'échantillons par segment de spline
 
 	private Vector2[] patrolPoints; // Points de patrouille
-	private int currentPointIndex = 0; // Index du point de patrouille actuel
-	private int nextPointIndex = 1; // Index du prochain point de patrouille
+	private List<Vector2> sampledPath; // Chemin échantillonné pour le mouvement à vitesse constante
+	private int currentSampleIndex = 0; // Index de l'échantillon actuel
 	private float patrolSpeed; // Vitesse de patrouille
 	private bool isActionRunning; // Indique si l'action est en cours
 
@@ -31,11 +32,11 @@ public class APatrol : BaseAction
 		patrolSpeed = UnityEngine.Random.Range(speedMin, speedMax);
 
 		GeneratePatrolPoints();
+		GenerateSampledPath();
 
-		if (patrolPoints.Length > 0)
+		if (sampledPath.Count > 0)
 		{
-			currentPointIndex = 0;
-			nextPointIndex = (currentPointIndex + 1) % patrolPoints.Length;
+			currentSampleIndex = 0;
 		}
 		else
 		{
@@ -56,39 +57,18 @@ public class APatrol : BaseAction
 
 	public override void UpdateAction()
 	{
-		if (!isActionRunning)
+		if (!isActionRunning || sampledPath.Count == 0)
 		{
 			return;
 		}
 
-		if (patrolPoints.Length > 0)
+		Vector2 targetPosition = sampledPath[currentSampleIndex];
+		Vector2 direction = (targetPosition - (Vector2)transform.position).normalized;
+		transform.position += (Vector3)(direction * patrolSpeed * Time.deltaTime);
+
+		if (Vector2.Distance(transform.position, targetPosition) <= reachThreshold)
 		{
-			Vector2 currentTarget = patrolPoints[currentPointIndex];
-			Vector2 nextTarget = patrolPoints[nextPointIndex];
-
-			// Calcule la direction vers le point actuel
-			Vector2 direction = (currentTarget - (Vector2)transform.position).normalized;
-
-			// Calcule la distance restante vers le point actuel
-			float distanceToCurrent = Vector2.Distance(transform.position, currentTarget);
-
-			// Si l'on est proche du point actuel, commence à se diriger vers le prochain point
-			if (distanceToCurrent <= weightTransitionDistance)
-			{
-				float weight = 1 - (distanceToCurrent / weightTransitionDistance);
-				Vector2 nextDirection = (nextTarget - (Vector2)transform.position).normalized;
-				direction = Vector2.Lerp(direction, nextDirection, weight);
-			}
-
-			// Déplace l'objet en fonction de la direction calculée
-			transform.position += (Vector3)(direction * patrolSpeed * Time.deltaTime);
-
-			// Si l'on atteint le point actuel, passe au point suivant
-			if (distanceToCurrent <= reachThreshold)
-			{
-				currentPointIndex = nextPointIndex;
-				nextPointIndex = (nextPointIndex + 1) % patrolPoints.Length;
-			}
+			currentSampleIndex = (currentSampleIndex + 1) % sampledPath.Count;
 		}
 
 		// Vérifier la condition de transition
@@ -105,7 +85,45 @@ public class APatrol : BaseAction
 		{
 			Vector2 randomPoint = Random.insideUnitCircle * patrolRadius;
 			patrolPoints[i] = (Vector2)transform.position + randomPoint;
+			Debug.Log($"Generated Patrol Point {i}: {patrolPoints[i]}");
 		}
+	}
+
+	private void GenerateSampledPath()
+	{
+		sampledPath = new List<Vector2>();
+		int n = patrolPoints.Length;
+
+		for (int i = 0; i < n; i++)
+		{
+			Vector2 p0 = patrolPoints[(i - 1 + n) % n];
+			Vector2 p1 = patrolPoints[i];
+			Vector2 p2 = patrolPoints[(i + 1) % n];
+			Vector2 p3 = patrolPoints[(i + 2) % n];
+
+			for (int j = 0; j <= samplesPerSegment; j++)
+			{
+				float t = j / (float)samplesPerSegment;
+				Vector2 pointOnSpline = CatmullRomSpline(t, p0, p1, p2, p3);
+				sampledPath.Add(pointOnSpline);
+			}
+		}
+	}
+
+	private Vector2 CatmullRomSpline(float t, Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3)
+	{
+		float tt = t * t;
+		float ttt = tt * t;
+
+		float q0 = -ttt + 2.0f * tt - t;
+		float q1 = 3.0f * ttt - 5.0f * tt + 2.0f;
+		float q2 = -3.0f * ttt + 4.0f * tt + t;
+		float q3 = ttt - tt;
+
+		float x = 0.5f * (p0.x * q0 + p1.x * q1 + p2.x * q2 + p3.x * q3);
+		float y = 0.5f * (p0.y * q0 + p1.y * q1 + p2.y * q2 + p3.y * q3);
+
+		return new Vector2(x, y);
 	}
 
 	private void OnDrawGizmosSelected()
@@ -115,9 +133,37 @@ public class APatrol : BaseAction
 
 		if (patrolPoints != null)
 		{
-			foreach (Vector2 point in patrolPoints)
+			for (int i = 0; i < patrolPoints.Length; i++)
 			{
-				Gizmos.DrawSphere(point, 0.2f);
+				Gizmos.DrawSphere(patrolPoints[i], 0.2f);
+			}
+
+			// Dessiner les courbes de Catmull-Rom
+			Gizmos.color = Color.yellow;
+			for (int i = 0; i < patrolPoints.Length; i++)
+			{
+				Vector2 p0 = patrolPoints[(i - 1 + patrolPoints.Length) % patrolPoints.Length];
+				Vector2 p1 = patrolPoints[i];
+				Vector2 p2 = patrolPoints[(i + 1) % patrolPoints.Length];
+				Vector2 p3 = patrolPoints[(i + 2) % patrolPoints.Length];
+				Vector2 previousPoint = p1;
+
+				for (float t = 0; t <= 1; t += 1.0f / samplesPerSegment)
+				{
+					Vector2 pointOnSpline = CatmullRomSpline(t, p0, p1, p2, p3);
+					Gizmos.DrawLine(previousPoint, pointOnSpline);
+					previousPoint = pointOnSpline;
+				}
+			}
+
+			// Dessiner le chemin échantillonné
+			if (sampledPath != null)
+			{
+				Gizmos.color = Color.red;
+				for (int i = 0; i < sampledPath.Count - 1; i++)
+				{
+					Gizmos.DrawLine(sampledPath[i], sampledPath[i + 1]);
+				}
 			}
 		}
 	}
