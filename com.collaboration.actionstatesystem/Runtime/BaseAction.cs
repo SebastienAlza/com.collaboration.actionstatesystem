@@ -1,6 +1,7 @@
-using UnityEngine;
 using UnityEditor;
+using UnityEngine;
 
+[ExecuteInEditMode]
 public abstract class BaseAction : MonoBehaviour, IAction
 {
 	public string actionName;
@@ -104,10 +105,13 @@ public abstract class BaseAction : MonoBehaviour, IAction
 		{
 			case ConditionType.TriggerCondition:
 				return typeof(TriggerCondition);
+
 			case ConditionType.TimerCondition:
 				return typeof(TimeCondition);
+
 			case ConditionType.ValueCondition:
 				return typeof(ValueCondition);
+
 			case ConditionType.None:
 			default:
 				return null;
@@ -157,43 +161,46 @@ public abstract class BaseAction : MonoBehaviour, IAction
 		}
 	}
 
-	private void OnDestroy()
+	private void OnDisable()
 	{
-		Debug.Log($"Destroying BaseAction: {actionName}");
-		CleanupCondition();
+		if (!Application.isPlaying)
+		{
+			CleanupCondition();
+		}
 	}
 
 	private void CleanupCondition()
 	{
 		if (condition != null)
 		{
-			Debug.Log($"Destroying condition for action: {actionName}");
 			DestroyImmediate(condition);
 			condition = null;
 		}
 
 		if (conditionHolder != null)
 		{
-			Debug.Log($"Destroying condition holder for action: {actionName}");
-			DestroyImmediate(conditionHolder);
-			conditionHolder = null;
+			var components = conditionHolder.GetComponents<Component>();
+			if (components.Length <= 1) // Seul le Transform reste
+			{
+				DestroyImmediate(conditionHolder);
+				conditionHolder = null;
+			}
 		}
 	}
 
 	public abstract void UpdateAction();
 }
 
-
-
-
-
-
 public interface IAction
 {
 	void Execute();
+
 	bool ShouldTransition();
+
 	void StartAction();
+
 	void StopAction();
+
 	void UpdateAction();
 }
 
