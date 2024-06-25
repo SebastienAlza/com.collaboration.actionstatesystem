@@ -1,10 +1,12 @@
 {
-    "name": "NewAssembly",
-    "rootNamespace": "",
+    "name": "ActionStateSytem.Editor",
+    "rootNamespace": "ActionStateSytem.Editor",
     "references": [
-        ""
+        "GUID:0576d3c0d56c520428e7f465323cd928"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
