@@ -14,7 +14,7 @@ public class AFollow : BaseAction
 
 	protected override void Awake()
 	{
-		actionName = "## > Follow Action";
+		actionName = "## > Follow Action"; 
 	}
 
 	public override void Execute()

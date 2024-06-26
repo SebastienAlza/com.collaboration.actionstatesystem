@@ -13,13 +13,19 @@ public class PauseAction : BaseAction
 
 	public override void StartAction()
 	{
+		base.StartAction();
 	}
 
 	public override void StopAction()
 	{
+		base.StopAction();
 	}
 
 	public override void UpdateAction()
 	{
+		if (ShouldTransition())
+		{
+			StopAction();
+		}
 	}
 }

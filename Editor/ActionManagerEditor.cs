@@ -36,6 +36,21 @@ public class ActionManagerEditor : Editor
 			EditorGUI.indentLevel--;
 		}
 
+		if (GUILayout.Button("Configure Actions"))
+		{
+			ConfigureActions(actionManager);
+		}
+
 		serializedObject.ApplyModifiedProperties();
+	}
+
+	private void ConfigureActions(ActionManager actionManager)
+	{
+		foreach (var action in actionManager.GetComponentsInChildren<BaseAction>())
+		{
+			action.SetActionManager(actionManager);
+			EditorUtility.SetDirty(action);
+		}
+		EditorUtility.SetDirty(actionManager);
 	}
 }

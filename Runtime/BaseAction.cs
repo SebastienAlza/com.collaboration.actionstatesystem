@@ -16,8 +16,6 @@ public abstract class BaseAction : MonoBehaviour, IAction
 	[SerializeField, HideInInspector]
 	private int conditionUniqueID;
 
-	private static int nextConditionID = 1; // Variable statique pour générer des identifiants uniques
-
 	private const string ConditionHolderName = "ConditionHolder";
 	private GameObject conditionHolder;
 
@@ -36,7 +34,7 @@ public abstract class BaseAction : MonoBehaviour, IAction
 	private void OnValidate()
 	{
 		// Manage conditions only in edit mode
-		if (!Application.isPlaying)
+		if (!Application.isPlaying )
 		{
 			EditorApplication.delayCall += ManageConditionComponentInEditor;
 		}
@@ -44,11 +42,11 @@ public abstract class BaseAction : MonoBehaviour, IAction
 
 	private void OnEnable()
 	{
-		// Manage prefab instances only in edit mode
-		if (!Application.isPlaying && PrefabUtility.IsPartOfPrefabInstance(gameObject))
-		{
-			ManageConditionComponentInEditor();
-		}
+	}
+
+	public void SetActionManager(ActionManager manager)
+	{
+		actionManager = manager;
 	}
 
 	private void ManageConditionComponentInEditor()
@@ -239,9 +237,9 @@ public abstract class BaseAction : MonoBehaviour, IAction
 	private void OnDisable()
 	{
 		// Cleanup conditions only in edit mode
-		if (!Application.isPlaying)
+		if (!Application.isPlaying && !gameObject.activeSelf)
 		{
-			CleanupCondition();
+			CleanupCondition(); 
 		}
 	}
 

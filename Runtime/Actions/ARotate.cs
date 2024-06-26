@@ -36,7 +36,6 @@ public class ARotate : BaseAction
 		}
 
 		transform.Rotate(Vector3.forward, rotationSpeed * Time.deltaTime);
-		Debug.Log("updateLocal" + actionName);
 		if (ShouldTransition())
 		{
 			//Debug.Log("Transition condition met, stopping action.");

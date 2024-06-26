@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 public class ActionManager : MonoBehaviour
 {
+	public bool IsEditMode = false;
 	[SerializeField] private List<BaseAction> actions = new List<BaseAction>();
 	private int currentActionIndex = 0;
 
