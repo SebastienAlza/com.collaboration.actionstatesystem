@@ -1,90 +1,87 @@
 using UnityEngine;
-
-public class ACharge : BaseAction
+namespace ActionStateSystem.Runtime
 {
-	public float chargeSpeed = 5f; // Vitesse de charge par seconde
-	public float chargeDuration = 1f; // Durée de la charge en secondes
-	private float chargeStartTime; // Temps de début de la charge
-	private Vector3 chargeDirection; // Direction de la charge
-
-	public LayerMask targetLayerMask; // LayerMask pour trouver la cible
-	public float detectionRadius = 5f; // Rayon de détection pour trouver la cible
-
-	private bool isActionRunning; // Indique si l'action est en cours
-	private Transform target; // Cible de la charge
-
-	protected override void Awake()
+	public class ACharge : BaseAction
 	{
-		actionName = "## > Charge Action";
-	}
+		public float chargeSpeed = 5f; // Vitesse de charge par seconde
+		public float chargeDuration = 1f; // Durée de la charge en secondes
+		private float chargeStartTime; // Temps de début de la charge
+		private Vector3 chargeDirection; // Direction de la charge
 
-	public override void Execute()
-	{
-		// Code à exécuter immédiatement lorsque l'action est déclenchée
-	}
+		public LayerMask targetLayerMask; // LayerMask pour trouver la cible
+		public float detectionRadius = 5f; // Rayon de détection pour trouver la cible
 
-	public override void StartAction()
-	{
-		isActionRunning = true;
-		chargeStartTime = Time.time;
+		private bool isActionRunning; // Indique si l'action est en cours
+		private Transform target; // Cible de la charge
 
-		// Trouver la cible
-		target = FindTarget();
-
-		if (target != null)
+		protected override void Awake()
 		{
-			chargeDirection = (target.position - transform.position).normalized;
+			actionName = "## > Charge Action";
 		}
 
-		Debug.Log("Entering ChargeAction");
-		base.StartAction();
-	}
-
-	public override void StopAction()
-	{
-		isActionRunning = false;
-		Debug.Log("Exiting ChargeAction");
-		base.StopAction();
-	}
-
-	public override void UpdateAction()
-	{
-		if (!isActionRunning)
+		public override void StartAction()
 		{
-			return;
+			isActionRunning = true;
+			chargeStartTime = Time.time;
+
+			// Trouver la cible
+			target = FindTarget();
+
+			if (target != null)
+			{
+				chargeDirection = (target.position - transform.position).normalized;
+			}
+
+			Debug.Log("Entering ChargeAction");
+			base.StartAction();
 		}
 
-		if (target != null)
+		public override void StopAction()
 		{
-			transform.position += chargeDirection * chargeSpeed * Time.deltaTime;
+			isActionRunning = false;
+			Debug.Log("Exiting ChargeAction");
+			base.StopAction();
+		}
 
-			if (Time.time - chargeStartTime >= chargeDuration)
+		public override void UpdateAction()
+		{
+			if (!isActionRunning)
+			{
+				return;
+			}
+
+			if (target != null)
+			{
+				transform.position += chargeDirection * chargeSpeed * Time.deltaTime;
+
+				if (Time.time - chargeStartTime >= chargeDuration)
+				{
+					StopAction();
+				}
+			}
+
+			// Vérifier la condition de transition
+			if (ShouldTransition())
 			{
 				StopAction();
 			}
 		}
 
-		// Vérifier la condition de transition
-		if (ShouldTransition())
+		private Transform FindTarget()
 		{
-			StopAction();
+			Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, detectionRadius, targetLayerMask);
+			if (hits.Length > 0)
+			{
+				// Retourne la position du premier collider trouvé
+				return hits[0].transform;
+			}
+			return null;
 		}
-	}
 
-	private Transform FindTarget()
-	{
-		Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, detectionRadius, targetLayerMask);
-		if (hits.Length > 0)
+		private void OnDrawGizmosSelected()
 		{
-			// Retourne la position du premier collider trouvé
-			return hits[0].transform;
+			Gizmos.color = Color.blue;
+			Gizmos.DrawWireSphere(transform.position, detectionRadius);
 		}
-		return null;
-	}
-
-	private void OnDrawGizmosSelected()
-	{
-		Gizmos.color = Color.blue;
-		Gizmos.DrawWireSphere(transform.position, detectionRadius);
 	}
 }

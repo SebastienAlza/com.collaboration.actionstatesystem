@@ -1,36 +1,39 @@
 using UnityEngine;
 
-public class TimeCondition : BaseCondition
+namespace ActionStateSystem.Runtime
 {
-	[SerializeField] private float duration = 5.0f; // Duration to wait in seconds
-	[SerializeField] public float currentTime; 
-	private float startTime;
-	private bool isStarted;
-
-	protected override void OnActivate()
+	public class TimeCondition : BaseCondition
 	{
-		ResetCondition();
-	}
+		[SerializeField] private float duration = 5.0f; // Duration to wait in seconds
+		[SerializeField] public float currentTime;
+		private float startTime;
+		private bool isStarted;
 
-	public override bool IsMet()
-	{
-		if (!isStarted)
+		protected override void OnActivate()
 		{
-			isStarted = true;
-			startTime = Time.time;
+			ResetCondition();
 		}
-		currentTime = Time.time - startTime;
-		return currentTime >= duration;
-	}
 
-	public void ResetCondition()
-	{
-		isStarted = false;
-	}
+		public override bool IsMet()
+		{
+			if (!isStarted)
+			{
+				isStarted = true;
+				startTime = Time.time;
+			}
+			currentTime = Time.time - startTime;
+			return currentTime >= duration;
+		}
 
-	private void OnDrawGizmos()
-	{
-		Gizmos.color = Color.blue;
-		Gizmos.DrawWireSphere(transform.position, 0.5f);
+		public void ResetCondition()
+		{
+			isStarted = false;
+		}
+
+		private void OnDrawGizmos()
+		{
+			Gizmos.color = Color.blue;
+			Gizmos.DrawWireSphere(transform.position, 0.5f);
+		}
 	}
 }

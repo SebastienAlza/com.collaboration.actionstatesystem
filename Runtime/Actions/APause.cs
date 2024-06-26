@@ -1,31 +1,29 @@
 using UnityEngine;
-
-public class PauseAction : BaseAction
+namespace ActionStateSystem.Runtime
 {
-	protected override void Awake()
+	public class PauseAction : BaseAction
 	{
-		actionName = "\"## > Action Pause";
-	}
-
-	public override void Execute()
-	{
-	}
-
-	public override void StartAction()
-	{
-		base.StartAction();
-	}
-
-	public override void StopAction()
-	{
-		base.StopAction();
-	}
-
-	public override void UpdateAction()
-	{
-		if (ShouldTransition())
+		protected override void Awake()
 		{
-			StopAction();
+			actionName = "\"## > Action Pause";
+		}
+
+		public override void StartAction()
+		{
+			base.StartAction();
+		}
+
+		public override void StopAction()
+		{
+			base.StopAction();
+		}
+
+		public override void UpdateAction()
+		{
+			if (ShouldTransition())
+			{
+				StopAction();
+			}
 		}
 	}
 }

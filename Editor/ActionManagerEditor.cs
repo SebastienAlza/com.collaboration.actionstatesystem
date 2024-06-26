@@ -1,56 +1,60 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
+using ActionStateSystem.Runtime;
 
-[CustomEditor(typeof(ActionManager))]
-public class ActionManagerEditor : Editor
+namespace ActionStateSystem.editor
 {
-	public override void OnInspectorGUI()
+	[CustomEditor(typeof(ActionManager))]
+	public class ActionManagerEditor : Editor
 	{
-		ActionManager actionManager = (ActionManager)target;
-
-		serializedObject.Update();
-
-		SerializedProperty actionsProperty = serializedObject.FindProperty("actions");
-
-		EditorGUILayout.PropertyField(actionsProperty, new GUIContent("Actions"), true);
-
-		if (actionsProperty.isExpanded)
+		public override void OnInspectorGUI()
 		{
-			EditorGUI.indentLevel++;
+			ActionManager actionManager = (ActionManager)target;
 
-			for (int i = 0; i < actionsProperty.arraySize; i++)
+			serializedObject.Update();
+
+			SerializedProperty actionsProperty = serializedObject.FindProperty("actions");
+
+			EditorGUILayout.PropertyField(actionsProperty, new GUIContent("Actions"), true);
+
+			if (actionsProperty.isExpanded)
 			{
-				SerializedProperty actionProperty = actionsProperty.GetArrayElementAtIndex(i);
-				BaseAction action = (BaseAction)actionProperty.objectReferenceValue;
-				if (action != null)
+				EditorGUI.indentLevel++;
+
+				for (int i = 0; i < actionsProperty.arraySize; i++)
 				{
-					EditorGUILayout.LabelField($"Action {i + 1}: {action.actionName}");
+					SerializedProperty actionProperty = actionsProperty.GetArrayElementAtIndex(i);
+					BaseAction action = (BaseAction)actionProperty.objectReferenceValue;
+					if (action != null)
+					{
+						EditorGUILayout.LabelField($"Action {i + 1}: {action.actionName}");
+					}
+					else
+					{
+						EditorGUILayout.LabelField($"Action {i + 1}: (null)");
+					}
 				}
-				else
-				{
-					EditorGUILayout.LabelField($"Action {i + 1}: (null)");
-				}
+
+				EditorGUI.indentLevel--;
 			}
 
-			EditorGUI.indentLevel--;
+			if (GUILayout.Button("Configure Actions"))
+			{
+				ConfigureActions(actionManager);
+			}
+
+			serializedObject.ApplyModifiedProperties();
 		}
 
-		if (GUILayout.Button("Configure Actions"))
+		private void ConfigureActions(ActionManager actionManager)
 		{
-			ConfigureActions(actionManager);
+			foreach (var action in actionManager.GetComponentsInChildren<BaseAction>())
+			{
+				action.SetActionManager(actionManager);
+				EditorUtility.SetDirty(action);
+			}
+			EditorUtility.SetDirty(actionManager);
 		}
-
-		serializedObject.ApplyModifiedProperties();
-	}
-
-	private void ConfigureActions(ActionManager actionManager)
-	{
-		foreach (var action in actionManager.GetComponentsInChildren<BaseAction>())
-		{
-			action.SetActionManager(actionManager);
-			EditorUtility.SetDirty(action);
-		}
-		EditorUtility.SetDirty(actionManager);
 	}
 }

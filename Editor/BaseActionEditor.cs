@@ -1,7 +1,11 @@
 using UnityEditor;
 using UnityEngine;
+using ActionStateSystem.Runtime;
 
-[CustomEditor(typeof(BaseAction), true)]
+namespace ActionStateSystem.editor
+{
+
+	[CustomEditor(typeof(BaseAction), true)]
 public class BaseActionEditor : Editor
 {
 	SerializedProperty conditionTypeProp;
@@ -44,3 +48,4 @@ public class BaseActionEditor : Editor
 		serializedObject.ApplyModifiedProperties();
 	}
 }
+	}
