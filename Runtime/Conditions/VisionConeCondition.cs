@@ -57,6 +57,12 @@ public class VisionConeCondition : BaseCondition
 			return true;
 		}
 
+		// Reset the previous state if the target is not found
+		if (!foundTarget)
+		{
+			conditionMetPreviously = false;
+		}
+
 		return false;
 	}
 

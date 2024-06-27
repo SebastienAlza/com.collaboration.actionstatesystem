@@ -343,8 +343,8 @@ MonoBehaviour:
   condition: {fileID: 1710036148}
   conditionUniqueID: 1595129415
   IsSubAction: 0
-  speedMin: 1.5
-  speedMax: 2
+  speedMin: 2
+  speedMax: 4
   targetTag: Player
 --- !u!114 &289404287
 MonoBehaviour:
@@ -364,7 +364,7 @@ MonoBehaviour:
   condition: {fileID: 0}
   conditionUniqueID: 0
   IsSubAction: 1
-  rotationSpeed: 10
+  rotationSpeed: 90
 --- !u!114 &289404288
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -401,7 +401,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c33feeef4bdf0dc488593feb3a6270e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  actionName: 
+  actionName: Patrol with cone vision
   actionManager: {fileID: 289404290}
   conditionType: 3
   condition: {fileID: 1710036149}
@@ -3179,7 +3179,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   uniqueID: 1595129415
-  radius: 7.04
+  radius: 6.42
   targetTag: Player
   eventType: 1
 --- !u!114 &1710036149
