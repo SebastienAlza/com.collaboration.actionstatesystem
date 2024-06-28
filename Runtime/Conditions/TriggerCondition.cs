@@ -1,82 +1,79 @@
 using UnityEngine;
 
-public enum TriggerEventType
+namespace ActionStateSystem.Runtime
 {
-	Enter,
-	Exit,
-	Stay
-}
-
-public class TriggerCondition : BaseCondition
-{
-	[SerializeField] private float radius = 1.0f; // Radius of the overlap circle
-	[TagSelector]
-	[SerializeField]
-	public string targetTag = "Enemy"; // Tag de la cible
-
-	public TriggerEventType eventType = TriggerEventType.Enter; // Type d'événement par défaut
-
-	public override bool IsMet()
+	public enum TriggerEventType
 	{
-		Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, radius);
-		bool conditionMet = false;
-		bool foundTarget = false;
-
-		foreach (var hit in hits)
-		{
-			if (hit.CompareTag(targetTag))
-			{
-				foundTarget = true;
-
-				switch (eventType)
-				{
-					case TriggerEventType.Enter:
-						conditionMet = true;
-						break;
-
-					case TriggerEventType.Exit:
-						conditionMet = false;
-						break;
-
-					case TriggerEventType.Stay:
-						// Vous pouvez ajouter une logique spécifique pour le "stay" si nécessaire
-						conditionMet = false;
-						break;
-				}
-
-				// Sortir de la boucle si la condition est remplie pour au moins un collider
-				if (conditionMet)
-				{
-					break;
-				}
-			}
-		}
-
-		// Si l'événement est "Exit", vérifiez si aucun collider avec le tag spécifié n'est encore dans la zone
-		if (eventType == TriggerEventType.Exit)
-		{
-			conditionMet = !foundTarget;
-		}
-
-		return conditionMet;
+		Enter,
+		Exit,
+		Stay
 	}
 
-
-	private bool IsAnyColliderStillInArea(Collider2D[] colliders)
+	public class TriggerCondition : BaseCondition
 	{
-		foreach (var collider in colliders)
+		[SerializeField] private float radius = 1.0f; // Radius of the overlap circle
+		[TagSelector]
+		[SerializeField] public string targetTag = "Enemy"; // Tag de la cible
+
+		public TriggerEventType eventType = TriggerEventType.Enter; // Type d'événement par défaut
+
+		[SerializeField] private bool useDynamicRadius = false; // Option pour utiliser le radius dynamique
+		[SerializeField] private DataProperties dataProperties; // Référence au ScriptableObject générique
+		[SerializeField] private string attributeName; // Nom de l'attribut pour le radius dynamique
+
+		public override bool IsMet()
 		{
-			if (collider.CompareTag(targetTag))
-			{
-				return true;
-			}
-		}
-		return false;
-	}
+			float effectiveRadius = radius; // Utiliser le radius par défaut
 
-	private void OnDrawGizmos()
-	{
-		Gizmos.color = Color.red;
-		Gizmos.DrawWireSphere(transform.position, radius);
+			if (useDynamicRadius && dataProperties != null && !string.IsNullOrEmpty(attributeName))
+			{
+				// Récupérer la valeur de la propriété dynamique
+				effectiveRadius = dataProperties.GetCurrentValue(attributeName);
+				Debug.Log("Radius : " + effectiveRadius);
+			}
+
+			Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, effectiveRadius);
+			bool conditionMet = false;
+			bool foundTarget = false;
+
+			foreach (var hit in hits)
+			{
+				if (hit.CompareTag(targetTag))
+				{
+					foundTarget = true;
+
+					switch (eventType)
+					{
+						case TriggerEventType.Enter:
+							conditionMet = true;
+							break;
+						case TriggerEventType.Exit:
+							conditionMet = false;
+							break;
+						case TriggerEventType.Stay:
+							conditionMet = false;
+							break;
+					}
+
+					if (conditionMet)
+					{
+						break;
+					}
+				}
+			}
+
+			if (eventType == TriggerEventType.Exit)
+			{
+				conditionMet = !foundTarget;
+			}
+
+			return conditionMet;
+		}
+
+		private void OnDrawGizmos()
+		{
+			Gizmos.color = Color.red;
+			Gizmos.DrawWireSphere(transform.position, radius);
+		}
 	}
 }

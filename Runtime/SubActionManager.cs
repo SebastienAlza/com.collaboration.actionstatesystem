@@ -77,6 +77,19 @@ namespace ActionStateSystem.Runtime
 			Debug.Log("SubActionManager " + this.actionName + " ShouldTransition: " + result);
 			return result;
 		}
+
+		public List<string> GetSubActionNames()
+		{
+			List<string> names = new List<string>();
+			foreach (var subAction in subActions)
+			{
+				if (subAction != null)
+				{
+					names.Add(subAction.actionName);
+				}
+			}
+			return names;
+		}
 	}
 
 }

@@ -22,7 +22,7 @@ namespace ActionStateSystem.Runtime
 
 		protected override void Awake()
 		{
-			actionName = "## > Patrol Action";
+			actionName = " Patrol Action";
 		}
 
 		public override void StartAction()

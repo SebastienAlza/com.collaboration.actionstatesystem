@@ -1,20 +1,25 @@
-using UnityEngine;
 using UnityEditor;
+using UnityEngine;
 using System.Collections.Generic;
 using ActionStateSystem.Runtime;
 
-namespace ActionStateSystem.editor
+namespace ActionStateSystem.CustomEditors
 {
 	[CustomEditor(typeof(ActionManager))]
-	public class ActionManagerEditor : Editor
+	public class ActionManagerEditor : UnityEditor.Editor
 	{
+		private SerializedProperty actionsProperty;
+
+		private void OnEnable()
+		{
+			actionsProperty = serializedObject.FindProperty("actions");
+		}
+
 		public override void OnInspectorGUI()
 		{
 			ActionManager actionManager = (ActionManager)target;
 
 			serializedObject.Update();
-
-			SerializedProperty actionsProperty = serializedObject.FindProperty("actions");
 
 			EditorGUILayout.PropertyField(actionsProperty, new GUIContent("Actions"), true);
 
@@ -28,7 +33,19 @@ namespace ActionStateSystem.editor
 					BaseAction action = (BaseAction)actionProperty.objectReferenceValue;
 					if (action != null)
 					{
-						EditorGUILayout.LabelField($"Action {i + 1}: {action.actionName}");
+						// Concaténer les noms des subActions s'il s'agit d'un SubActionManager
+						string actionNames = action.actionName;
+						if (action is SubActionManager subActionManager)
+						{
+							List<string> subActionNames = subActionManager.GetSubActionNames();
+							if (subActionNames.Count > 0)
+							{
+								actionNames += "SubActions: " + string.Join(" & ", subActionNames) + "";
+							}
+						}
+
+						EditorGUILayout.LabelField($"Action {i + 1}: {actionNames}");
+
 					}
 					else
 					{

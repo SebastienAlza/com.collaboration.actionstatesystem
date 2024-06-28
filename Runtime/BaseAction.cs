@@ -6,7 +6,9 @@ namespace ActionStateSystem.Runtime
 	[ExecuteInEditMode]
 	public abstract class BaseAction : MonoBehaviour, IAction
 	{
+		[HideInInspector]
 		public string actionName;
+
 		public ActionManager actionManager;
 
 		[SerializeField]
@@ -26,7 +28,7 @@ namespace ActionStateSystem.Runtime
 
 		protected virtual void Awake()
 		{
-			// Load the condition only in edit mode
+			// Charger la condition uniquement en mode édition
 			if (!Application.isPlaying)
 			{
 				LoadCondition();
@@ -35,7 +37,7 @@ namespace ActionStateSystem.Runtime
 
 		private void OnValidate()
 		{
-			// Manage conditions only in edit mode
+			// Gérer les conditions uniquement en mode édition
 			if (!Application.isPlaying)
 			{
 				EditorApplication.delayCall += ManageConditionComponentInEditor;
@@ -57,7 +59,7 @@ namespace ActionStateSystem.Runtime
 			{
 				var objectToDestroy = condition;
 				condition = null;
-				conditionUniqueID = 0; // Reset the unique ID
+				conditionUniqueID = 0; // Réinitialiser l'ID unique
 				EditorApplication.delayCall += () =>
 				{
 					if (objectToDestroy != null)
@@ -91,13 +93,13 @@ namespace ActionStateSystem.Runtime
 							if (condition != null)
 							{
 								AssignUniqueID(condition); // Assigner un ID unique
-								conditionUniqueID = condition.uniqueID; // Save the unique ID
+								conditionUniqueID = condition.uniqueID; // Enregistrer l'ID unique
 							}
 						};
 					}
 					else
 					{
-						conditionUniqueID = condition.uniqueID; // Save the unique ID
+						conditionUniqueID = condition.uniqueID; // Enregistrer l'ID unique
 					}
 				}
 			}
@@ -238,7 +240,7 @@ namespace ActionStateSystem.Runtime
 
 		private void OnDisable()
 		{
-			// Cleanup conditions only in edit mode
+			// Nettoyer les conditions uniquement en mode édition
 			if (!Application.isPlaying && !gameObject.activeSelf)
 			{
 				CleanupCondition();
@@ -251,7 +253,7 @@ namespace ActionStateSystem.Runtime
 			{
 				DestroyImmediate(condition);
 				condition = null;
-				conditionUniqueID = 0; // Reset the unique ID
+				conditionUniqueID = 0; // Réinitialiser l'ID unique
 			}
 
 			if (conditionHolder != null)

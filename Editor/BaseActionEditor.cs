@@ -2,50 +2,53 @@ using UnityEditor;
 using UnityEngine;
 using ActionStateSystem.Runtime;
 
-namespace ActionStateSystem.editor
+namespace ActionStateSystem.CustomEditors
 {
-
 	[CustomEditor(typeof(BaseAction), true)]
-public class BaseActionEditor : Editor
-{
-	SerializedProperty conditionTypeProp;
-
-	private void OnEnable()
+	public class BaseActionEditor : Editor
 	{
-		conditionTypeProp = serializedObject.FindProperty("conditionType");
-	}
+		SerializedProperty conditionTypeProp;
+		SerializedProperty actionColorProp;
 
-	public override void OnInspectorGUI()
-	{
-		serializedObject.Update();
-
-		// Afficher les autres propriétés du script sauf conditionType
-		DrawPropertiesExcluding(serializedObject, "conditionType", "condition");
-
-		// Afficher conditionType séparément
-		EditorGUILayout.PropertyField(conditionTypeProp);
-
-		BaseAction baseAction = (BaseAction)target;
-
-		// Afficher les propriétés de la condition dans un repli
-		if (baseAction.GetCondition() != null)
+		private void OnEnable()
 		{
-			if (EditorGUILayout.Foldout(true, "Condition Settings"))
-			{
-				SerializedObject conditionSerializedObject = new SerializedObject(baseAction.GetCondition());
-				SerializedProperty conditionProp = conditionSerializedObject.GetIterator();
-
-				conditionProp.NextVisible(true); // Aller au premier enfant visible
-				while (conditionProp.NextVisible(false)) // Itérer à travers les propriétés
-				{
-					EditorGUILayout.PropertyField(conditionProp, true);
-				}
-
-				conditionSerializedObject.ApplyModifiedProperties();
-			}
+			conditionTypeProp = serializedObject.FindProperty("conditionType");
 		}
 
-		serializedObject.ApplyModifiedProperties();
+		public override void OnInspectorGUI()
+		{
+			serializedObject.Update();
+
+			// Display the custom header
+			BaseAction baseAction = (BaseAction)target;
+			EditorGUILayout.LabelField($"Action Name: {baseAction.actionName}");
+
+			// Display the other properties
+			DrawPropertiesExcluding(serializedObject, "conditionType", "condition", "actionColor");
+
+			// Display conditionType separately
+			EditorGUILayout.PropertyField(conditionTypeProp);
+
+			// Display the properties of the condition in a foldout
+			if (baseAction.GetCondition() != null)
+			{
+				if (EditorGUILayout.Foldout(true, "Condition Settings"))
+				{
+					SerializedObject conditionSerializedObject = new SerializedObject(baseAction.GetCondition());
+					SerializedProperty conditionProp = conditionSerializedObject.GetIterator();
+
+					conditionProp.NextVisible(true); // Go to the first visible child
+					while (conditionProp.NextVisible(false)) // Iterate through the properties
+					{
+						EditorGUILayout.PropertyField(conditionProp, true);
+					}
+
+					conditionSerializedObject.ApplyModifiedProperties();
+				}
+			}
+
+			serializedObject.ApplyModifiedProperties();
+		}
+
 	}
 }
-	}

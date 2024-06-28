@@ -15,7 +15,7 @@ namespace ActionStateSystem.Runtime
 
 		protected override void Awake()
 		{
-			actionName = "## > Follow Action";
+			actionName = " Follow Action";
 		}
 
 		public override void StartAction()
