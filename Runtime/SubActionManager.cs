@@ -19,7 +19,7 @@ namespace ActionStateSystem.Runtime
 		}
 		public override void StartAction()
 		{
-			Debug.Log("SubActionManager " + this.actionName + " démarrée");
+			//Debug.Log("SubActionManager " + this.actionName + " démarrée");
 			isActionRunning = true;
 			currentSubActionIndex = 0;
 
@@ -39,7 +39,7 @@ namespace ActionStateSystem.Runtime
 
 		public override void StopAction()
 		{
-			Debug.Log("SubActionManager " + this.actionName + " arrêtée");
+			//Debug.Log("SubActionManager " + this.actionName + " arrêtée");
 			isActionRunning = false;
 
 			foreach (BaseAction action in subActions)
@@ -64,7 +64,7 @@ namespace ActionStateSystem.Runtime
 			// Vérifier la condition de SubActionManager
 			if (base.ShouldTransition())
 			{
-				Debug.Log("SubActionManager condition met, stopping all sub-actions.");
+				//Debug.Log("SubActionManager condition met, stopping all sub-actions.");
 				StopAction();
 				isActionRunning = false;
 				return;
@@ -74,7 +74,7 @@ namespace ActionStateSystem.Runtime
 		public override bool ShouldTransition()
 		{
 			bool result = base.ShouldTransition();
-			Debug.Log("SubActionManager " + this.actionName + " ShouldTransition: " + result);
+			//Debug.Log("SubActionManager " + this.actionName + " ShouldTransition: " + result);
 			return result;
 		}
 

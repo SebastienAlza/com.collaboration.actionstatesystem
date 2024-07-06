@@ -1,4 +1,6 @@
+using UnityEditor;
 using UnityEngine;
+using static UnityEngine.GraphicsBuffer;
 
 namespace ActionStateSystem.Runtime
 {
@@ -17,19 +19,14 @@ namespace ActionStateSystem.Runtime
 
 		public TriggerEventType eventType = TriggerEventType.Enter; // Type d'événement par défaut
 
-		[SerializeField] private bool useDynamicRadius = false; // Option pour utiliser le radius dynamique
-		[SerializeField] private DataProperties dataProperties; // Référence au ScriptableObject générique
-		[SerializeField] private string attributeName; // Nom de l'attribut pour le radius dynamique
-
 		public override bool IsMet()
 		{
 			float effectiveRadius = radius; // Utiliser le radius par défaut
 
-			if (useDynamicRadius && dataProperties != null && !string.IsNullOrEmpty(attributeName))
+			if (useDynamicData && dataProperties != null && !string.IsNullOrEmpty(attributeName))
 			{
 				// Récupérer la valeur de la propriété dynamique
-				effectiveRadius = dataProperties.GetCurrentValue(attributeName);
-				Debug.Log("Radius : " + effectiveRadius);
+				effectiveRadius = dataProperties.GetCurrentFloatValue(attributeName);
 			}
 
 			Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, effectiveRadius);

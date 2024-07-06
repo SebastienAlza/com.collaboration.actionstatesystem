@@ -1,8 +1,8 @@
 using UnityEngine;
-using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Burst;
+
 namespace ActionStateSystem.Runtime
 {
 	public class APatrol : BaseAction
@@ -22,7 +22,7 @@ namespace ActionStateSystem.Runtime
 
 		protected override void Awake()
 		{
-			actionName = " Patrol Action";
+			actionName = "Patrol Action";
 		}
 
 		public override void StartAction()
@@ -48,6 +48,7 @@ namespace ActionStateSystem.Runtime
 		public override void StopAction()
 		{
 			isActionRunning = false;
+			CleanupNativeArrays(); // Cleanup NativeArrays when stopping the action
 			base.StopAction();
 		}
 
@@ -88,6 +89,10 @@ namespace ActionStateSystem.Runtime
 		private void GenerateSampledPath()
 		{
 			int totalSamples = numberOfPatrolPoints * samplesPerSegment;
+			if (sampledPath.IsCreated)
+			{
+				sampledPath.Dispose();
+			}
 			sampledPath = new NativeArray<Vector2>(totalSamples, Allocator.Persistent);
 
 			var job = new GenerateSampledPathJob
@@ -139,22 +144,25 @@ namespace ActionStateSystem.Runtime
 
 				return new Vector2(x, y);
 			}
-
-
 		}
 
 		private void OnDestroy()
+		{
+			CleanupNativeArrays();
+		}
+
+		private void CleanupNativeArrays()
 		{
 			if (sampledPath.IsCreated)
 			{
 				sampledPath.Dispose();
 			}
 		}
+
 		private void OnDrawGizmos()
 		{
 			Gizmos.color = Color.green;
 			Gizmos.DrawWireSphere(transform.position, patrolRadius);
 		}
-
 	}
 }

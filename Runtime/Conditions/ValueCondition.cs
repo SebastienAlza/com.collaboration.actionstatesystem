@@ -2,10 +2,10 @@ using UnityEngine;
 
 public class ValueCondition : BaseCondition
 {
-	[SerializeField] private Component targetComponent; // Composant cible
-	[SerializeField] private string fieldName; // Nom de la propriété ou du champ à vérifier
-	[SerializeField] private float targetValueFloat; // Valeur cible pour les floats
-	[SerializeField] private bool targetValueBool; // Valeur cible pour les booléens
+	[SerializeField] private Component targetComponent; // Target component
+	[SerializeField] private string fieldName; // Name of the field or property to check
+	[SerializeField] private float targetValueFloat; // Target value for floats
+	[SerializeField] private bool targetValueBool; // Target value for booleans
 	[SerializeField] private ComparisonType comparisonType = ComparisonType.GreaterThanOrEqual;
 
 	public override bool IsMet()
@@ -28,42 +28,52 @@ public class ValueCondition : BaseCondition
 
 		if (targetField != null)
 		{
-			if (targetField.FieldType == typeof(float))
-			{
-				float currentValue = (float)targetField.GetValue(targetComponent);
-				return CompareValues(currentValue);
-			}
-			else if (targetField.FieldType == typeof(bool))
-			{
-				bool currentValue = (bool)targetField.GetValue(targetComponent);
-				return CompareValues(currentValue);
-			}
-			else
-			{
-				Debug.LogWarning($"ValueCondition: Field '{fieldName}' is not of type float or bool.");
-				return false;
-			}
+			return CheckField(targetField);
 		}
 		else if (targetProperty != null)
 		{
-			if (targetProperty.PropertyType == typeof(float))
-			{
-				float currentValue = (float)targetProperty.GetValue(targetComponent);
-				return CompareValues(currentValue);
-			}
-			else if (targetProperty.PropertyType == typeof(bool))
-			{
-				bool currentValue = (bool)targetProperty.GetValue(targetComponent);
-				return CompareValues(currentValue);
-			}
-			else
-			{
-				Debug.LogWarning($"ValueCondition: Property '{fieldName}' is not of type float or bool.");
-				return false;
-			}
+			return CheckProperty(targetProperty);
 		}
 
 		return false;
+	}
+
+	private bool CheckField(System.Reflection.FieldInfo field)
+	{
+		if (field.FieldType == typeof(float))
+		{
+			float currentValue = (float)field.GetValue(targetComponent);
+			return CompareValues(currentValue);
+		}
+		else if (field.FieldType == typeof(bool))
+		{
+			bool currentValue = (bool)field.GetValue(targetComponent);
+			return CompareValues(currentValue);
+		}
+		else
+		{
+			Debug.LogWarning($"ValueCondition: Field '{field.Name}' is not of type float or bool.");
+			return false;
+		}
+	}
+
+	private bool CheckProperty(System.Reflection.PropertyInfo property)
+	{
+		if (property.PropertyType == typeof(float))
+		{
+			float currentValue = (float)property.GetValue(targetComponent);
+			return CompareValues(currentValue);
+		}
+		else if (property.PropertyType == typeof(bool))
+		{
+			bool currentValue = (bool)property.GetValue(targetComponent);
+			return CompareValues(currentValue);
+		}
+		else
+		{
+			Debug.LogWarning($"ValueCondition: Property '{property.Name}' is not of type float or bool.");
+			return false;
+		}
 	}
 
 	private bool CompareValues(float currentValue)

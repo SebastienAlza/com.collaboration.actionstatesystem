@@ -1,73 +1,104 @@
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
+
 namespace ActionStateSystem.Runtime
 {
 	public class ActionManager : MonoBehaviour
 	{
 		[SerializeField] private List<BaseAction> actions = new List<BaseAction>();
-		private int currentActionIndex = 0;
+		private List<BaseAction> actionsWithConditions = new List<BaseAction>();
+		private List<BaseAction> actionsWithoutConditions = new List<BaseAction>();
+		private int currentActionIndexWithCondition = 0;
 
 		private void Start()
 		{
-			StartCurrentAction();
+			foreach (var action in actions)
+			{
+				if (action.conditionType == ConditionType.None)
+				{
+					actionsWithoutConditions.Add(action);
+					action.StartAction();  // Démarrer les actions sans conditions dès le début
+				}
+				else
+				{
+					actionsWithConditions.Add(action);
+				}
+			}
+
+			StartCurrentActionWithCondition();
 		}
 
 		private void Update()
 		{
-			if (currentActionIndex >= actions.Count)
-			{
-				ResetActions();
-				StartCurrentAction();
-				return;
-			}
-
-			UpdateCurrentAction();
+			UpdateCurrentActionWithCondition();
+			UpdateCurrentActionsWithoutConditions();
 		}
 
-		private void StartCurrentAction()
+		private void StartCurrentActionWithCondition()
 		{
-			if (currentActionIndex < actions.Count)
+			if (currentActionIndexWithCondition < actionsWithConditions.Count)
 			{
-				actions[currentActionIndex].actionManager = this;
-				actions[currentActionIndex].ResetCondition();
-				actions[currentActionIndex].StartAction();
+				var currentAction = actionsWithConditions[currentActionIndexWithCondition];
+				currentAction.actionManager = this;
+				currentAction.ResetCondition();
+				currentAction.StartAction();
 			}
 		}
 
-		private void UpdateCurrentAction()
+		private void UpdateCurrentActionWithCondition()
 		{
-			if (currentActionIndex < actions.Count)
+			if (currentActionIndexWithCondition < actionsWithConditions.Count)
 			{
-				var currentAction = actions[currentActionIndex];
+				var currentAction = actionsWithConditions[currentActionIndexWithCondition];
 				currentAction.UpdateAction();
 
 				if (currentAction.ShouldTransition())
 				{
-					Debug.Log("Action " + currentAction.actionName + " completed. Moving to next.");
+					Debug.Log("Action " + currentAction.actionName + " terminée. Passer à la suivante.");
 					currentAction.StopAction();
-					currentActionIndex++;
-					StartCurrentAction();
+					currentActionIndexWithCondition++;
+					StartCurrentActionWithCondition();
+				}
+			}
+			else
+			{
+				// Toutes les actions avec condition sont terminées, on recommence du début
+				ResetActionsWithCondition();
+				StartCurrentActionWithCondition();
+			}
+		}
+
+		private void UpdateCurrentActionsWithoutConditions()
+		{
+			foreach (BaseAction currentAction in actionsWithoutConditions)
+			{
+				currentAction.UpdateAction();
+
+				// Restart the action immediately after stopping it
+				if (currentAction.ShouldTransition())
+				{
+					currentAction.StopAction();
+					currentAction.StartAction();
 				}
 			}
 		}
 
-		private void ResetActions()
+		private void ResetActionsWithCondition()
 		{
-			currentActionIndex = 0;
-			foreach (var action in actions)
+			currentActionIndexWithCondition = 0;
+			foreach (var action in actionsWithConditions)
 			{
 				action.ResetCondition();
 			}
 		}
 
-		public void ActionCompleted()
+		public void ActionWithConditionCompleted()
 		{
-			if (currentActionIndex < actions.Count)
+			if (currentActionIndexWithCondition < actionsWithConditions.Count)
 			{
-				currentActionIndex++;
-				StartCurrentAction();
+				currentActionIndexWithCondition++;
+				StartCurrentActionWithCondition();
 			}
 		}
 	}
-
 }

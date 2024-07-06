@@ -11,8 +11,14 @@ namespace ActionStateSystem.Runtime
 
 		public ActionManager actionManager;
 
-		[SerializeField]
-		private ConditionType conditionType;
+		[HideInInspector]
+		public bool useDynamicData = false;
+		[HideInInspector]
+		public DataProperties dataProperties;
+		[HideInInspector]
+		public string attributeName;
+
+		public ConditionType conditionType;
 
 		[SerializeField, HideInInspector]
 		private BaseCondition condition;
@@ -28,7 +34,6 @@ namespace ActionStateSystem.Runtime
 
 		protected virtual void Awake()
 		{
-			// Charger la condition uniquement en mode édition
 			if (!Application.isPlaying)
 			{
 				LoadCondition();
@@ -37,7 +42,6 @@ namespace ActionStateSystem.Runtime
 
 		private void OnValidate()
 		{
-			// Gérer les conditions uniquement en mode édition
 			if (!Application.isPlaying)
 			{
 				EditorApplication.delayCall += ManageConditionComponentInEditor;
@@ -59,7 +63,7 @@ namespace ActionStateSystem.Runtime
 			{
 				var objectToDestroy = condition;
 				condition = null;
-				conditionUniqueID = 0; // Réinitialiser l'ID unique
+				conditionUniqueID = 0;
 				EditorApplication.delayCall += () =>
 				{
 					if (objectToDestroy != null)
@@ -92,14 +96,14 @@ namespace ActionStateSystem.Runtime
 							condition = conditionHolder.AddComponent(type) as BaseCondition;
 							if (condition != null)
 							{
-								AssignUniqueID(condition); // Assigner un ID unique
-								conditionUniqueID = condition.uniqueID; // Enregistrer l'ID unique
+								AssignUniqueID(condition);
+								conditionUniqueID = condition.uniqueID;
 							}
 						};
 					}
 					else
 					{
-						conditionUniqueID = condition.uniqueID; // Enregistrer l'ID unique
+						conditionUniqueID = condition.uniqueID;
 					}
 				}
 			}
@@ -130,8 +134,27 @@ namespace ActionStateSystem.Runtime
 				if (conditionHolder == null)
 				{
 					conditionHolder = new GameObject(ConditionHolderName);
-					conditionHolder.transform.SetParent(transform);
-					conditionHolder.transform.localPosition = Vector3.zero;
+
+#if UNITY_EDITOR
+					if (!Application.isPlaying)
+					{
+						var prefabStage = UnityEditor.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
+						if (prefabStage != null && prefabStage.prefabContentsRoot == gameObject)
+						{
+							Debug.LogWarning("Cannot set the parent of a transform which resides in a Prefab Asset to prevent data corruption.");
+						}
+						else
+						{
+							conditionHolder.transform.SetParent(transform);
+							conditionHolder.transform.localPosition = Vector3.zero;
+						}
+					}
+					else
+#endif
+					{
+						conditionHolder.transform.SetParent(transform);
+						conditionHolder.transform.localPosition = Vector3.zero;
+					}
 				}
 			}
 		}
@@ -155,19 +178,14 @@ namespace ActionStateSystem.Runtime
 			{
 				case ConditionType.TriggerCondition:
 					return typeof(TriggerCondition);
-
 				case ConditionType.TimerCondition:
 					return typeof(TimeCondition);
-
 				case ConditionType.VisionConeCondition:
 					return typeof(VisionConeCondition);
-
 				case ConditionType.ValueCondition:
 					return typeof(ValueCondition);
-
 				case ConditionType.AlwaysTrueCondition:
 					return typeof(AlwaysTrueCondition);
-
 				case ConditionType.None:
 				default:
 					return null;
@@ -234,13 +252,21 @@ namespace ActionStateSystem.Runtime
 			}
 			if (actionManager != null && IsSubAction != true)
 			{
-				actionManager.ActionCompleted();
+				actionManager.ActionWithConditionCompleted();
+			}
+		}
+
+		public void RestartIfNoCondition()
+		{
+			if (conditionType == ConditionType.None)
+			{
+				StopAction();
+				StartAction();
 			}
 		}
 
 		private void OnDisable()
 		{
-			// Nettoyer les conditions uniquement en mode édition
 			if (!Application.isPlaying && !gameObject.activeSelf)
 			{
 				CleanupCondition();
@@ -253,13 +279,13 @@ namespace ActionStateSystem.Runtime
 			{
 				DestroyImmediate(condition);
 				condition = null;
-				conditionUniqueID = 0; // Réinitialiser l'ID unique
+				conditionUniqueID = 0;
 			}
 
 			if (conditionHolder != null)
 			{
 				var components = conditionHolder.GetComponents<Component>();
-				if (components.Length <= 1) // Seul le Transform reste
+				if (components.Length <= 1)
 				{
 					DestroyImmediate(conditionHolder);
 					conditionHolder = null;
@@ -273,11 +299,8 @@ namespace ActionStateSystem.Runtime
 	public interface IAction
 	{
 		bool ShouldTransition();
-
 		void StartAction();
-
 		void StopAction();
-
 		void UpdateAction();
 	}
 
@@ -289,6 +312,5 @@ namespace ActionStateSystem.Runtime
 		VisionConeCondition,
 		ValueCondition,
 		AlwaysTrueCondition
-		// Ajoutez d'autres types de conditions ici
 	}
 }

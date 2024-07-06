@@ -28,12 +28,11 @@ namespace ActionStateSystem.Runtime
 					if (activationType == ActivationType.Activate)
 					{
 						component.enabled = true; // Active le composant MonoBehaviour
-						Debug.Log("Component activated: " + component.GetType().Name);
+						//Debug.Log("Component activated: " + component.GetType().Name);
 					}
 					else if (activationType == ActivationType.Deactivate)
 					{
 						component.enabled = false; // Désactive le composant MonoBehaviour
-						Debug.Log("Component deactivated: " + component.GetType().Name);
 					}
 				}
 				else
