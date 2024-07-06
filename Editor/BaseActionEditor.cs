@@ -16,10 +16,10 @@ namespace ActionStateSystem.CustomEditors
 
 		private void OnEnable()
 		{
+			conditionTypeProp = serializedObject.FindProperty("conditionType");
 			useDynamicDataProp = serializedObject.FindProperty("useDynamicData");
 			dataPropertiesProp = serializedObject.FindProperty("dataProperties");
 			attributeNameProp = serializedObject.FindProperty("attributeName");
-			conditionTypeProp = serializedObject.FindProperty("conditionType");
 		}
 
 		public override void OnInspectorGUI()
@@ -53,11 +53,6 @@ namespace ActionStateSystem.CustomEditors
 					EditorGUILayout.PropertyField(dataPropertiesProp);
 					EditorGUILayout.PropertyField(attributeNameProp);
 				}
-				else
-				{
-					dataPropertiesProp.isExpanded = false;
-					attributeNameProp.isExpanded = false;
-				}
 			}
 
 			// Display conditionType separately
@@ -70,12 +65,17 @@ namespace ActionStateSystem.CustomEditors
 				if (conditionSettingsFoldout)
 				{
 					SerializedObject conditionSerializedObject = new SerializedObject(baseAction.GetCondition());
+					conditionSerializedObject.Update();
 					SerializedProperty conditionProp = conditionSerializedObject.GetIterator();
 
 					conditionProp.NextVisible(true); // Go to the first visible child
 					while (conditionProp.NextVisible(false)) // Iterate through the properties
 					{
-						EditorGUILayout.PropertyField(conditionProp, true);
+						// Ensure we skip "m_Script" which is a default property in Unity
+						if (conditionProp.name != "m_Script" && conditionProp.name != "conditionType" && conditionProp.name != "useDynamicData" && conditionProp.name != "dataProperties" && conditionProp.name != "attributeName")
+						{
+							EditorGUILayout.PropertyField(conditionProp, true);
+						}
 					}
 
 					conditionSerializedObject.ApplyModifiedProperties();
