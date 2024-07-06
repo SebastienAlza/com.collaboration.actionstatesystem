@@ -14,19 +14,16 @@ namespace ActionStateSystem.Runtime
 		public float speedMin = 2f;
 		public float speedMax = 4f;
 		public bool followHeaded = false;
-		public LayerMask targetLayer; // LayerMask de la cible
-		public float searchRadius = 20f; // Rayon de recherche pour les cibles
-		public float updateInterval = 0.5f; // Intervalle de mise à jour des cibles potentielles
+		[TagSelector]
+		public string targetTag; // Tag de la cible
 
 		private float followSpeed = 3f; // Vitesse de suivi par seconde
 		private bool isActionRunning; // Indique si l'action est en cours
 		private Transform target; // Cible du suivi
-		private List<Transform> potentialTargets = new List<Transform>(); // Liste des cibles potentielles
 		public FollowEffect followEffect = FollowEffect.Normal; // Effet de suivi
 
 		// Variables spécifiques à chaque effet
 		public float rippleAmplitude = 0.5f; // Amplitude de l'ondulation
-		private float nextUpdateTime = 0.1f; // Temps pour la prochaine mise à jour des cibles
 
 		protected override void Awake()
 		{
@@ -47,6 +44,9 @@ namespace ActionStateSystem.Runtime
 			}
 
 			rippleAmplitude = Random.Range(rippleAmplitude * 0.5f, rippleAmplitude);
+
+			FindTarget(); // Trouver la cible au début
+
 			base.StartAction();
 		}
 
@@ -58,23 +58,7 @@ namespace ActionStateSystem.Runtime
 
 		public override void UpdateAction()
 		{
-			if (!isActionRunning)
-			{
-				return;
-			}
-
-			if (Time.time >= nextUpdateTime)
-			{
-				FindPotentialTargets();
-				nextUpdateTime = Time.time + updateInterval;
-			}
-
-			if (target == null || !potentialTargets.Contains(target))
-			{
-				SetTarget();
-			}
-
-			if (target == null)
+			if (!isActionRunning || target == null)
 			{
 				return;
 			}
@@ -110,42 +94,13 @@ namespace ActionStateSystem.Runtime
 			}
 		}
 
-		private void FindPotentialTargets()
+		private void FindTarget()
 		{
-			potentialTargets.Clear(); // Clear the list to avoid duplications
-			Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, searchRadius, targetLayer);
-			foreach (Collider2D collider in colliders)
+			GameObject targetObject = GameObject.FindGameObjectWithTag(targetTag);
+			if (targetObject != null)
 			{
-				potentialTargets.Add(collider.transform);
+				target = targetObject.transform;
 			}
-		}
-
-		private void SetTarget()
-		{
-			target = FindClosestTarget();
-		}
-
-		private Transform FindClosestTarget()
-		{
-			Transform closestTarget = null;
-			float closestDistance = Mathf.Infinity;
-
-			foreach (Transform potentialTarget in potentialTargets)
-			{
-				if (potentialTarget == null)
-				{
-					continue; // Skip destroyed targets
-				}
-
-				float distance = Vector3.Distance(transform.position, potentialTarget.position);
-				if (distance < closestDistance)
-				{
-					closestDistance = distance;
-					closestTarget = potentialTarget;
-				}
-			}
-
-			return closestTarget;
 		}
 	}
 }

@@ -40,7 +40,7 @@ namespace ActionStateSystem.Runtime
 			{
 				var currentAction = actionsWithConditions[currentActionIndexWithCondition];
 				currentAction.actionManager = this;
-				currentAction.ResetCondition();
+				//currentAction.ResetCondition();
 				currentAction.StartAction();
 			}
 		}

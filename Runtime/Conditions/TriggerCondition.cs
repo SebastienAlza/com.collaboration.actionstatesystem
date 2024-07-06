@@ -13,9 +13,9 @@ namespace ActionStateSystem.Runtime
 
 	public class TriggerCondition : BaseCondition
 	{
-		[SerializeField] private float radius = 1.0f; // Radius of the overlap circle
+		public float radius = 1.0f; // Radius of the overlap circle
 		[TagSelector]
-		[SerializeField] public string targetTag = "Enemy"; // Tag de la cible
+		public string targetTag = "Enemy"; // Tag de la cible
 
 		public TriggerEventType eventType = TriggerEventType.Enter; // Type d'événement par défaut
 

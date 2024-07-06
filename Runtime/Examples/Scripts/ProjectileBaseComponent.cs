@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class ProjectileBaseComponent : MonoBehaviour
@@ -13,15 +12,33 @@ public class ProjectileBaseComponent : MonoBehaviour
 		direction = dir.normalized;
 	}
 
-	void Update()
+	private void OnEnable()
 	{
-		transform.Translate(direction * speed * Time.deltaTime, Space.World);
+		StartCoroutine(MoveProjectile());
+	}
 
-		// Check if the projectile is out of the camera bounds
-		Vector3 position = Camera.main.WorldToViewportPoint(transform.position);
-		if (position.x < 0 || position.x > 1 || position.y < 0 || position.y > 1)
+	private void OnDisable()
+	{
+		StopCoroutine(MoveProjectile());
+	}
+
+	private IEnumerator MoveProjectile()
+	{
+		while (true)
 		{
-			Destroy(gameObject);
+			// Déplacement du projectile
+			transform.Translate(direction * speed * Time.deltaTime, Space.World);
+
+			// Vérification si le projectile est en dehors des limites de la caméra
+			Vector3 position = Camera.main.WorldToViewportPoint(transform.position);
+			if (position.x < 0 || position.x > 1 || position.y < 0 || position.y > 1)
+			{
+				Destroy(gameObject);
+				yield break; // Quitter la coroutine
+			}
+
+			// Attendre la fin de la frame avant de continuer la boucle
+			yield return null;
 		}
 	}
 }

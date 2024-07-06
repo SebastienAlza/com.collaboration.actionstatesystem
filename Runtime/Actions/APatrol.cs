@@ -9,16 +9,19 @@ namespace ActionStateSystem.Runtime
 	{
 		public float speedMin = 2f;
 		public float speedMax = 4f;
+		public bool followHeaded = false;
 		public float patrolRadius = 10f; // Rayon de la patrouille
 		public int numberOfPatrolPoints = 5; // Nombre de points de patrouille
 		public float reachThreshold = 0.5f; // Distance à laquelle on considère que le point est atteint
 		public int samplesPerSegment = 10; // Nombre d'échantillons par segment de spline
+		public float elasticity = 0.1f; // Facteur d'élasticité pour les transitions douces
 
 		private Vector2[] patrolPoints; // Points de patrouille
 		private NativeArray<Vector2> sampledPath; // Chemin échantillonné pour le mouvement à vitesse constante
 		private int currentSampleIndex = 0; // Index de l'échantillon actuel
 		private float patrolSpeed; // Vitesse de patrouille
 		private bool isActionRunning; // Indique si l'action est en cours
+		private Vector2 currentVelocity; // Vitesse actuelle pour l'interpolation douce
 
 		protected override void Awake()
 		{
@@ -61,11 +64,18 @@ namespace ActionStateSystem.Runtime
 
 			Vector2 targetPosition = sampledPath[currentSampleIndex];
 			Vector2 direction = (targetPosition - (Vector2)transform.position).normalized;
-			transform.position += (Vector3)(direction * patrolSpeed * Time.deltaTime);
+			currentVelocity = Vector2.Lerp(currentVelocity, direction * patrolSpeed, Time.deltaTime / elasticity);
+			transform.position += (Vector3)(currentVelocity * Time.deltaTime);
 
 			if (Vector2.Distance(transform.position, targetPosition) <= reachThreshold)
 			{
 				currentSampleIndex = (currentSampleIndex + 1) % sampledPath.Length;
+			}
+
+			// Orienter l'objet pour regarder vers la cible
+			if (followHeaded)
+			{
+				transform.right = Vector3.Lerp(transform.right, currentVelocity.normalized, Time.deltaTime / elasticity); // Utilisez Lerp pour une transition plus fluide
 			}
 
 			// Vérifier la condition de transition
@@ -81,8 +91,26 @@ namespace ActionStateSystem.Runtime
 			Vector2 initialPosition = transform.position; // Cache initial position to avoid multiple calls to transform.position
 			for (int i = 0; i < numberOfPatrolPoints; i++)
 			{
-				Vector2 randomPoint = Random.insideUnitCircle * patrolRadius;
-				patrolPoints[i] = initialPosition + randomPoint;
+				Vector2 randomPoint;
+				bool pointIsValid;
+
+				do
+				{
+					pointIsValid = true;
+					randomPoint = Random.insideUnitCircle * patrolRadius;
+					patrolPoints[i] = initialPosition + randomPoint;
+
+					// Check the distance to previous points
+					for (int j = 0; j < i; j++)
+					{
+						if (Vector2.Distance(patrolPoints[i], patrolPoints[j]) < reachThreshold * 2) // Adjust this threshold as needed
+						{
+							pointIsValid = false;
+							break;
+						}
+					}
+				}
+				while (!pointIsValid);
 			}
 		}
 
